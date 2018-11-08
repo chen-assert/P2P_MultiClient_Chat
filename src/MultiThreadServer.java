@@ -1,6 +1,6 @@
 
 
-package aboullaite;
+package src;
 
 import javax.swing.*;
 import java.io.IOException;

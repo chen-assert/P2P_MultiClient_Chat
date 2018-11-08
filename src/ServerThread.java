@@ -4,14 +4,14 @@
  * and open the template in the editor.
  */
 
-package aboullaite;
+package src;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
-import static aboullaite.MultiThreadServer.maxClientsCount;
-import static aboullaite.MultiThreadServer.threadpools;
+import static src.MultiThreadServer.maxClientsCount;
+import static src.MultiThreadServer.threadpools;
 
 /**
  * @author mohammed
