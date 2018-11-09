@@ -36,13 +36,14 @@ public class ServerThread implements Runnable {
 
     //@param  exclude  0--broadcast all,1--exclude self
     public void broadcast(String text, int exclude) throws IOException {
+        //show the log in server
+        System.out.println(text);
         for (ServerThread aThreadpools2 : threadpool) {
             if (exclude == 1 && aThreadpools2 == this) {
 
             } else {
                 aThreadpools2.send(text);
             }
-
         }
     }
 

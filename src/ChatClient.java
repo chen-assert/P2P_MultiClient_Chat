@@ -9,6 +9,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -24,7 +26,24 @@ public class ChatClient {
             super.notifyObservers(arg);
         }
         public void InitSocket(String server, int port) throws IOException {
-            socket = new Socket(server, port);
+            try {
+                notifyObservers("Try to connect to server@" + server + ":" + port);
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(server,port),10000);
+            }catch (Exception e){
+                notifyObservers("Connection fail");
+                e.printStackTrace();
+                try{
+                Thread.sleep(2000);}
+                catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+                System.exit(0);
+
+            }
+            notifyObservers("Connection success");
+
+            //socket = new Socket(server, port);
             outputStream = new DataOutputStream(socket.getOutputStream());
             try {
                 receive();
