@@ -2,7 +2,7 @@ package src;
 
 import javax.swing.*;
 
-//Class to precise who is connected : Client or Server
+//Main activity to choose start client or server
 public class Main_activity {
 
 
@@ -11,12 +11,12 @@ public class Main_activity {
         Object[] selectioValues = {"Server", "Client"};
         String initialSection = "Server";
 
-        Object selection = JOptionPane.showInputDialog(null, "Login as : ", "MyChatApp",
+        Object selection = JOptionPane.showInputDialog(null, "Login as : ", "Multi_Client_Chat",
                 JOptionPane.QUESTION_MESSAGE, null, selectioValues, initialSection);
         if (selection == null) return;
         if (selection.equals("Server")) {
             String[] arguments = new String[]{};
-            new MultiThreadServer().main(arguments);
+            new CoreServer().main(arguments);
         } else if (selection.equals("Client")) {
             String IPServer = JOptionPane.showInputDialog("Enter the Server ip address");
             String[] arguments = new String[]{IPServer};
