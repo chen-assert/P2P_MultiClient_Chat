@@ -10,6 +10,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,22 +23,31 @@ public class ServerThread implements Runnable {
     private DataInputStream is = null;
     private DataOutputStream os = null;
     private Socket clientSocket;
-    private int clientCount = 0;
+    private int clientCount;
+    protected Vector<String> hists;
 
     public ServerThread(Socket clientSocket, int clientCount) {
         this.clientSocket = clientSocket;
         this.clientCount = clientCount;
+        hists = new Vector<>();
     }
 
     public void send(String text) throws IOException {
-        os.writeUTF((text));
-        os.flush();
+        synchronized (this) {
+            os.writeUTF((text));
+            os.flush();
+        }
     }
 
     //@param  exclude  0--broadcast all,1--exclude self
     public void broadcast(String text, int exclude) throws IOException {
-        for (int i = 0; i < threadpools2.size(); i++) {
-            threadpools2.get(i).send(text);
+        for (ServerThread aThreadpools2 : threadpools2) {
+            if (exclude == 1 && aThreadpools2 == this) {
+
+            } else {
+                aThreadpools2.send(text);
+            }
+
         }
     }
 
@@ -61,55 +71,49 @@ public class ServerThread implements Runnable {
             os.flush();
             name = is.readUTF().trim();
             clientName = name;
-            os.writeUTF("Welcome " + name
+            send("Welcome " + name
                     + " to our chat room.\nTo leave enter STOP in a new line.");
-            os.flush();
-            synchronized (ServerThread.class) {
-                for (int i = 0; i < threadpools2.size(); i++) {
-                    if (threadpools2.get(i) != null && threadpools2.get(i) != this) {
-                        threadpools2.get(i).send("A new user " + name + " entered the chat room");
-                    }
-                }
-            }
+            broadcast("A new user " + name + " entered the chat room", 1);
             /* Start the conversation. */
             while (true) {
                 String line = is.readUTF();
+                hists.add(line);
+                if(hists.size()>30)hists.remove(0);
                 if (line.equals("STOP")) {
                     break;
                 }
                 /* If the message is private sent it to the given client. */
                 /* The message is public, broadcast it to all other clients. */
-                if (startWithIgnoreCase(line,"BROADCAST")) {
-                    synchronized (ServerThread.class) {
-                        String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
-                        Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-                        Matcher m = r.matcher(line);
-                        if (m.find()) {
-                            broadcast("<" + name + "> " + m.group(1), 0);
-                        }
+                if (startWithIgnoreCase(line, "BROADCAST")) {
+                    String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
+                    Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+                    Matcher m = r.matcher(line);
+                    if (m.find()) {
+                        broadcast("<" + name + "> " + m.group(1), 0);
+                    } else {
+                        send("invalid command, please input HELP to see command list");
                     }
                     continue;
                 }
-                if (startWithIgnoreCase(line,"LIST")) {
-                    synchronized (ServerThread.class) {
-                        for (int i = 0; i < threadpools2.size(); i++) {
-                            ServerThread t = threadpools2.get(i);
-                            send(String.format("%sUsername:%s/ID:%s\t\t(%s)", t == this ? "*" : "", t.clientName, t.clientCount, t.clientSocket));
-                        }
+                if (startWithIgnoreCase(line, "LIST")) {
+                    for (ServerThread t : threadpools2) {
+                        send(String.format("%sUsername:%s/ID:%s\t\t(%s)", t == this ? "*" : "", t.clientName, t.clientCount, t.clientSocket));
                     }
                     continue;
                 }
-                if (startWithIgnoreCase(line,"KICK")) {
+                if (startWithIgnoreCase(line, "KICK")) {
                     String pattern = "KICK\\s*-\\s*(.*)\\s*";
                     Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
                     Matcher m = r.matcher(line);
                     int flag = 0;
                     if (m.find()) {
-                        for (int i = 0; i < threadpools2.size(); i++) {
+                        for (ServerThread aThreadpools2 : threadpools2) {
                             String kuser = m.group(1);
-                            if (kuser.equals(threadpools2.get(i).clientName) || kuser.equals(String.valueOf(threadpools2.get(i).clientCount))) {
+                            if (kuser.equals(aThreadpools2.clientName) || kuser.equals(String.valueOf(aThreadpools2.clientCount))) {
                                 broadcast(kuser + " has been kicked!", 0);
-                                threadpools2.get(i).send("@KICK");
+                                aThreadpools2.send("@KICK");
+                                flag = 1;
+                                break;
                             }
                         }
                         if (flag == 0) {
@@ -122,7 +126,29 @@ public class ServerThread implements Runnable {
                     continue;
                 }
 
-                if (startWithIgnoreCase(line,"STATS")) {
+                if (startWithIgnoreCase(line, "STATS")) {
+                    String pattern = "STATS\\s*-\\s*(.*)\\s*";
+                    Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+                    Matcher m = r.matcher(line);
+                    int flag = 0;
+                    if (m.find()) {
+                        for (ServerThread aThreadpools2 : threadpools2) {
+                            String suser = m.group(1);
+                            if (suser.equals(aThreadpools2.clientName) || suser.equals(String.valueOf(aThreadpools2.clientCount))) {
+                                for (String hist :aThreadpools2.hists) {
+                                    send(suser+":"+hist);
+                                }
+                                flag = 1;
+                                break;
+                            }
+                        }
+                        if (flag == 0) {
+                            send("can't find user {" + m.group(1) + "}");
+                        }
+                    } else {
+                        send("invalid command, please input HELP to see command list");
+                    }
+
 
                     continue;
                 }
@@ -132,9 +158,9 @@ public class ServerThread implements Runnable {
 
 
             synchronized (ServerThread.class) {
-                for (int i = 0; i < threadpools2.size(); i++) {
-                    if (threadpools2.get(i) != null && threadpools2.get(i) != this) {
-                        threadpools2.get(i).send("*** The user " + name + " is leaving the chat room ***");
+                for (ServerThread aThreadpools2 : threadpools2) {
+                    if (aThreadpools2 != null && aThreadpools2 != this) {
+                        aThreadpools2.send("*** The user " + name + " is leaving the chat room ***");
                     }
                 }
             }
@@ -156,7 +182,6 @@ public class ServerThread implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
             threadpools2.remove(this);
-            return;
         }
     }
 }

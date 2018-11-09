@@ -17,8 +17,6 @@ import java.util.Vector;
 public class MultiThreadServer {
     // The server socket.
     private static ServerSocket serverSocket = null;
-    // The client socket.
-    private static Socket clientSocket = null;
 
     // This chat server can accept up to maxClientsCount clients' connections.
     protected static final int maxClientsCount = 100;
@@ -37,7 +35,7 @@ public class MultiThreadServer {
         // The default port number.
         int portNumber;
         if (args.length >= 1) {
-            portNumber = Integer.valueOf(args[0]).intValue();
+            portNumber = Integer.valueOf(args[0]);
         } else {
             portNumber = 9548;
         }
@@ -59,7 +57,8 @@ public class MultiThreadServer {
         int count = 1;
         while (true) {
             try {
-                clientSocket = serverSocket.accept();
+                // The client socket.
+                Socket clientSocket = serverSocket.accept();
                 ServerThread serverThread = new ServerThread(clientSocket, count++);
                 Thread t = new Thread(serverThread);
                 t.start();
