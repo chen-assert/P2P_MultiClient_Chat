@@ -82,6 +82,12 @@ public class ChatClient {
                 if (line.equals("@KICK")) {
                     notifyObservers("you have been kicked!!");
                     close();
+                    try {
+                        Thread.sleep(8000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.exit(0);
                     break;
                 }
                 notifyObservers(line);
