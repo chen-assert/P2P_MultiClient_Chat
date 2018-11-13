@@ -13,15 +13,15 @@ For using this application, you need a system with gui environment, and it requi
 
 To running a local server, you need to open the *P2P_Multi_Client_Chat_App.jar* file 
 
-![2](.\res\2.jpg)
+![2](./res/2.jpg)
 
 and choose to open as *Server*.
 
-![1](.\res\1.jpg)
+![1](./res/1.jpg)
 
 Then you will see a window to indicate that you have already started the server.
 
-![3](.\res\3.jpg)
+![3](./res/3.jpg)
 
 ###### 2.2 System usage
 
@@ -29,21 +29,21 @@ To running the client, you need to pre-start a local server, or you can use a re
 
 First, we choose to open the client activity.
 
-![4](.\res\4.jpg)
+![4](./res/4.jpg)
 
 Then, we choose to login into the *Test Remote Server*
 
-![5](.\res\5.jpg)
+![5](./res/5.jpg)
 
 After successful connect to the server and enter your username,
 
-![6](.\res\6.jpg)
+![6](./res/6.jpg)
 
 then you can enter your command freely.
 
 First, you can enter *HELP* to see command list.
 
-![7](.\res\7.jpg)
+![7](./res/7.jpg)
 
 ###### command EXP:
 
@@ -51,30 +51,30 @@ First, you can enter *HELP* to see command list.
 
    You can use {BRODACAST - {content}} to send broadcast to any other users.
 
-   ![8](.\res\8.jpg)
+   ![8](./res/8.jpg)
 
 2. stop
 
    You can use {STOP} to close the connection.
 
-   ![13](.\res\13.jpg)
+   ![13](./res/13.jpg)
 
 3. list
 
    You can use {LIST} to display all clients.
 
-   ![9](.\res\9.jpg)
+   ![9](./res/9.jpg)
 
 4. kick
 
    You can use {KICK - ID} to kick one user.
 
-   ![11](.\res\11.jpg)
+   ![11](./res/11.jpg)
 
 5. stats
 
    You can use {STATS - ID} to get a list a user's command history.
 
-   ![10](.\res\10.jpg)
+   ![10](./res/10.jpg)
 
 
