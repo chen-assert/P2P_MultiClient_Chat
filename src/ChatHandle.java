@@ -5,6 +5,7 @@ package src;
  * @author jingruichen
  * @since 2018-11-12
  */
+import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,6 +15,17 @@ import java.util.Observable;
 
 //using observer model to manage text flash
 class ChatHandle extends Observable {
+    class exit_ extends Thread{
+        public void run(){
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+    }
+
     private Socket socket;
     private DataOutputStream outputStream;
     @Override
@@ -67,6 +79,10 @@ class ChatHandle extends Observable {
         } catch (IOException ex) {
             notifyObservers(ex);
         }
+        if(text.equals("STOP")) {
+                notifyObservers("You have left from the chat room, and the window would stop in 10 seconds.");
+                new exit_().start();
+        }
     }
 
     //receive a new message
@@ -79,12 +95,6 @@ class ChatHandle extends Observable {
                 //receive @KICK command
                 notifyObservers("you have been kicked!!");
                 close();
-                try {
-                    Thread.sleep(8000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                System.exit(0);
                 break;
             }
             notifyObservers(line);
