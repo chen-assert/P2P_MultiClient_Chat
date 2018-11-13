@@ -1,5 +1,10 @@
 package src;
-
+/**
+ * core server module to allocate server thread to every user
+ *
+ * @author jingruichen
+ * @since 2018-11-08
+ */
 import javax.swing.*;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -24,6 +29,7 @@ public class CoreServer {
             frame.setVisible(true);
         } catch (Exception e) {
             //make the problem can running in headless service
+            //window is unnecessary
             e.printStackTrace();
         }
         int portNumber;
@@ -50,7 +56,7 @@ public class CoreServer {
                 threadpool.add(serverThread);
                 if (threadpool.size() >= maxClientsCount) {
                     PrintStream os = new PrintStream(clientSocket.getOutputStream());
-                    os.println("error:Server's connection reach to the limit");
+                    os.println("ERROR:Server's connection reach to the limit");
                     os.close();
                     clientSocket.close();
                 }

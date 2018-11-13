@@ -1,4 +1,10 @@
 package src;
+/**
+ * server thread to handle single user
+ *
+ * @author jingruichen
+ * @since 2018-11-08
+ */
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static src.CoreServer.threadpool;
+import static src.Heart.HEART;
 
 
 // one client correspond to one thread
@@ -33,8 +40,10 @@ public class ServerThread implements Runnable {
             os.flush();
         }
     }
-
-    //@param  exclude  0--broadcast all,1--exclude self
+    /**
+    @text the broadcast text
+    @exclude  0--broadcast all,1--exclude self
+    */
     public void broadcast(String text, int exclude) throws IOException {
         //show the log in server
         System.out.println(text);
@@ -60,15 +69,19 @@ public class ServerThread implements Runnable {
             is = new DataInputStream(clientSocket.getInputStream());
             os = new DataOutputStream(clientSocket.getOutputStream());
             String name;
-            os.writeUTF("Enter your name.");
-            os.flush();
+            send("Please enter your name:");
             name = is.readUTF().trim();
             clientName = name;
+            //input name
             send("Welcome " + name + " to our chat room.\nTo leave enter STOP in a new line.");
             broadcast("*** A new user " + name + " entered the chat room ***", 1);
-            /* Start the conversation. */
+            // Start the conversation
             while (true) {
                 String line = is.readUTF();
+                //if receive heart package then do nothing
+                if(line.equals(HEART)){
+                    continue;
+                }
                 hists.add(line);
                 // at most record 30 line history
                 if (hists.size() > 30) hists.remove(0);
@@ -79,6 +92,7 @@ public class ServerThread implements Runnable {
                     String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
                     Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
                     Matcher m = r.matcher(line);
+                    //parse the input content
                     if (m.find()) {
                         broadcast("<" + name + "> " + m.group(1), 0);
                     } else {
@@ -147,12 +161,12 @@ public class ServerThread implements Runnable {
                 send("invalid command, please input HELP to see command list");
             }
 
+            //clean up
             send("Bye~" + name);
             synchronized (this) {
                 threadpool.remove(this);
             }
             broadcast("*** The user " + name + " has left the chat room ***", 0);
-            //clean up
             is.close();
             os.close();
             clientSocket.close();

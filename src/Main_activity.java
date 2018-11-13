@@ -1,10 +1,13 @@
 package src;
-
+/**
+ * Main activity to start client or server
+ *
+ * @author jingruichen
+ * @since 2018-11-08
+ */
 import javax.swing.*;
 
-//Main activity to choose start client or server
 public class Main_activity {
-
 
     public static void main(String[] args) {
 
@@ -18,12 +21,12 @@ public class Main_activity {
             new CoreServer().main(arguments);
         } else if (selection.equals("Client")) {
             String IPServer;
-            selectioValues = new Object[]{"Local Server", "Test Remote Client", "Manual Input"};
+            //choose predefined server or manual input
+            selectioValues = new Object[]{"Local Server", "Test Remote Server", "Manual Input"};
             initialSection = "Local Server";
             selection = JOptionPane.showInputDialog(null, "Login into server:", "Multi_Client_Chat",
                     JOptionPane.QUESTION_MESSAGE, null, selectioValues, initialSection);
-
-            if(selection.equals("Test Remote Client"))IPServer="chat.chenassert.xyz";
+            if(selection.equals("Test Remote Server"))IPServer="chat.chenassert.xyz";
             else if(selection.equals("Local Server"))IPServer="localhost";
             else IPServer = JOptionPane.showInputDialog("Enter the Server ip address");
             String[] arguments = new String[]{IPServer};

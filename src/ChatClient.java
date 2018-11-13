@@ -1,5 +1,10 @@
 package src;
-
+/**
+ * client side of the chat system
+ *
+ * @author jingruichen
+ * @since 2018-11-08
+ */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -9,104 +14,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.InetSocketAddress;
 import java.util.Observable;
 import java.util.Observer;
 
 
 public class ChatClient {
-    //using observer model to manage text flash
-    static class ChatHandle extends Observable {
-        private Socket socket;
-        private DataOutputStream outputStream;
-        @Override
-        public void notifyObservers(Object arg) {
-            super.setChanged();
-            super.notifyObservers(arg);
-        }
-        public void InitSocket(String server, int port) throws IOException {
-            try {
-                notifyObservers("Try to connect to server@" + server + ":" + port);
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(server,port),10000);
-            }catch (Exception e){
-                notifyObservers("Connection fail");
-                e.printStackTrace();
-                try{
-                Thread.sleep(2000);}
-                catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
-                System.exit(0);
-
-            }
-            notifyObservers("Connection success");
-
-            //socket = new Socket(server, port);
-            outputStream = new DataOutputStream(socket.getOutputStream());
-            try {
-                receive();
-            } catch (IOException e) {
-                //put the exception to screen
-                notifyObservers(e);
-            }
-        }
-
-
-        public void send(String text) {
-            //handle HELP command in local
-            if(text.equalsIgnoreCase("HELP")){
-                String str= text+"\n"+
-                            "  - command {BROADCAST - {content}} enables a client to send text to all the other clients connected to the server;\n" +
-                            "  - command {STOP} forces the server to close the connection with the client that initiated the command, this event must be announced to all other clients;\n" +
-                            "  - command {LIST} displays a list of all client IDs currently connected to the server;\n" +
-                            "  - command {KICK - ID} closes the connection between the server and the IP client, and also announces this to all clients;\n" +
-                            "  - command {STATS - ID} gets a list of all commands used by the client identified by the ID.\n";
-                notifyObservers(str);
-                return ;
-            }
-            try {
-                outputStream.writeUTF((text));
-                outputStream.flush();
-            } catch (IOException ex) {
-                notifyObservers(ex);
-            }
-        }
-
-        public void receive() throws IOException {
-            DataInputStream is = new DataInputStream(socket.getInputStream());
-            String line;
-            while (true) {
-                line = is.readUTF();
-                if (line.equals("@KICK")) {
-                    notifyObservers("you have been kicked!!");
-                    close();
-                    try {
-                        Thread.sleep(8000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    System.exit(0);
-                    break;
-                }
-                notifyObservers(line);
-            }
-        }
-
-        /**
-         * Close the socket
-         */
-        public void close() {
-            try {
-                send("STOP");
-                socket.close();
-            } catch (IOException ex) {
-                notifyObservers(ex);
-            }
-        }
-    }
-
     //GUI
     static class ChatFrame extends JFrame implements Observer {
         private JTextArea textArea;
@@ -121,6 +34,14 @@ public class ChatClient {
         }
 
         private void buildGUI() {
+            /*
+                    GUI struct:
+                    ***********
+                    *********** ←TextArea
+                    ***********
+                    --------###
+             inputTextField|Send button
+             */
             textArea = new JTextArea(20, 50);
             textArea.setEditable(false);
             textArea.setLineWrap(true);
@@ -150,14 +71,13 @@ public class ChatClient {
             });
         }
 
-        //push the object to the screen
+        //push the object to the screen(maybe chat information or exception information)
         public void update(Observable o, Object arg) {
             SwingUtilities.invokeLater(() -> {
                 textArea.append(arg.toString() + "\n");
             });
         }
     }
-
     public static void main(String[] args) {
         String server = null;
         if (args.length != 0) {
