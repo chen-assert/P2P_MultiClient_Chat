@@ -37,7 +37,7 @@ public class ChatClient {
             /*
                     GUI struct:
                     ***********
-                    *********** ←TextArea
+                    *********** <-TextArea
                     ***********
                     --------###
              inputTextField|Send button
