@@ -5,7 +5,6 @@ package src;
  * @author jingruichen
  * @since 2018-11-12
  */
-import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -54,7 +53,7 @@ class ChatHandle extends Observable {
         outputStream = new DataOutputStream(socket.getOutputStream());
         try {
             receive();
-        } catch (IOException e) {
+        } catch (Exception e) {
             //put the exception to screen
             notifyObservers(e);
         }
@@ -74,9 +73,9 @@ class ChatHandle extends Observable {
             return ;
         }
         try {
-            outputStream.writeUTF((text));
+            outputStream.writeUTF(new PBE_Encrypt().encode(text));
             outputStream.flush();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             notifyObservers(ex);
         }
         if(text.equals("STOP")) {
@@ -86,11 +85,11 @@ class ChatHandle extends Observable {
     }
 
     //receive a new message
-    public void receive() throws IOException {
+    public void receive() throws Exception {
         DataInputStream is = new DataInputStream(socket.getInputStream());
         String line;
         while (true) {
-            line = is.readUTF();
+            line = new PBE_Encrypt().decode(is.readUTF());
             if (line.equals("@KICK")) {
                 //receive @KICK command
                 notifyObservers("you have been kicked!!");

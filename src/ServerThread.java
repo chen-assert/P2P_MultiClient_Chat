@@ -8,7 +8,6 @@ package src;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -34,22 +33,26 @@ public class ServerThread implements Runnable {
         hists = new Vector<>();
     }
 
-    public void send(String text) throws IOException {
+    public void send(String text) throws Exception {
         synchronized (this) {
-            os.writeUTF((text));
+
+            os.writeUTF(new PBE_Encrypt().encode(text));
             os.flush();
         }
+    }
+    public String receive() throws Exception {
+        String  line =new PBE_Encrypt().decode(is.readUTF());
+        return line;
     }
     /**
     @text the broadcast text
     @exclude  0--broadcast all,1--exclude self
     */
-    public void broadcast(String text, int exclude) throws IOException {
+    public void broadcast(String text, int exclude) throws Exception {
         //show the log in server
         System.out.println(text);
         for (ServerThread aThreadpools2 : threadpool) {
             if (exclude == 1 && aThreadpools2 == this) {
-
             } else {
                 aThreadpools2.send(text);
             }
@@ -70,14 +73,14 @@ public class ServerThread implements Runnable {
             os = new DataOutputStream(clientSocket.getOutputStream());
             String name;
             send("Please enter your name:");
-            name = is.readUTF().trim();
+            name =receive().trim();
             clientName = name;
             //input name
             send("Welcome " + name + " to our chat room.\nTo leave enter STOP in a new line.");
             broadcast("*** A new user " + name + " entered the chat room ***", 1);
             // Start the conversation
             while (true) {
-                String line = is.readUTF();
+                String line = receive();
                 //if receive heart package then do nothing
                 if(line.equals(HEART)){
                     continue;
@@ -170,7 +173,7 @@ public class ServerThread implements Runnable {
             is.close();
             os.close();
             clientSocket.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             //avoid potential problem
             threadpool.remove(this);
