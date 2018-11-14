@@ -9,7 +9,7 @@ This is a simple P2P multiclient chat system that can use local and remote serve
 For using this application, you need a system with gui environment, and it required a JRE runtime which version is jre1.8.0_144 or later, and if you want to use the remote server, you need connected to the Internet.
 
 ### 2.0 GUTTING STARTED
-###### 2.1 Start server
+###### 2.1 Start Server
 
 To running a local server, you need to open the *P2P_Multi_Client_Chat_App.jar* file 
 
@@ -23,7 +23,7 @@ Then you will see a window to indicate that you have already started the server.
 
 ![3](./res/3.jpg)
 
-###### 2.2 System usage
+###### 2.2 Link to Server
 
 To running the client, you need to pre-start a local server, or you can use a remote server provided by others(In the application has a pre-seted server), and in there, we use the pre-seted server to demonstrate.
 
@@ -45,7 +45,8 @@ First, you can enter *HELP* to see command list.
 
 ![7](./res/7.jpg)
 
-###### command EXP:
+### 3.0 System Usage
+###### 3.1 Command List
 
 1. broadcast
 

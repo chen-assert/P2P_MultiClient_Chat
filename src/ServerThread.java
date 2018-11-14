@@ -35,7 +35,6 @@ public class ServerThread implements Runnable {
 
     public void send(String text) throws Exception {
         synchronized (this) {
-
             os.writeUTF(new PBE_Encrypt().encode(text));
             os.flush();
         }

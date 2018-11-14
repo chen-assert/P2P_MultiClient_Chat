@@ -118,7 +118,6 @@ public class PBE_Encrypt {
 
     public void test() throws Exception {
         String data = "需要处理的数据";
-
         byte[] cryptograph = this.encript(password, salt, data.getBytes("UTF-8"));
         byte[] newData = this.decript(password, salt, cryptograph);
         System.out.println(data);
