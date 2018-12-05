@@ -55,8 +55,9 @@ public class ChatClient {
             // Action for the inputTextField and the goButton
             ActionListener sendListener = e -> {
                 String str = inputTextField.getText();
-                if (str != null && str.trim().length() > 0)
+                if (str != null && str.trim().length() > 0) {
                     chatHandle.send(str);
+                }
                 inputTextField.requestFocus();
                 inputTextField.setText("");
             };
