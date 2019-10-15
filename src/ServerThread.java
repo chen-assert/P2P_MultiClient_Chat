@@ -35,18 +35,22 @@ public class ServerThread implements Runnable {
 
     public void send(String text) throws Exception {
         synchronized (this) {
-            os.writeUTF(new PBE_Encrypt().encode(text));
+            //os.writeUTF(new PBE_Encrypt().encode(text));
+            os.writeUTF(text);
             os.flush();
         }
     }
+
     public String receive() throws Exception {
-        String  line =new PBE_Encrypt().decode(is.readUTF());
+        //String  line =new PBE_Encrypt().decode(is.readUTF());
+        String line = is.readUTF();
         return line;
     }
+
     /**
-    @text the broadcast text
-    @exclude  0--broadcast all,1--exclude self
-    */
+     * @text the broadcast text
+     * @exclude 0--broadcast all,1--exclude self
+     */
     public void broadcast(String text, int exclude) throws Exception {
         //show the log in server
         System.out.println(text);
@@ -58,7 +62,7 @@ public class ServerThread implements Runnable {
         }
     }
 
-    public boolean startWithIgnoreCase(String src, String obj) {
+    public static boolean  startWithIgnoreCase(String src, String obj) {
         if (obj.length() > src.length()) {
             return false;
         }
@@ -72,7 +76,7 @@ public class ServerThread implements Runnable {
             os = new DataOutputStream(clientSocket.getOutputStream());
             String name;
             send("Please enter your name:");
-            name =receive().trim();
+            name = receive().trim();
             clientName = name;
             //input name
             send("Welcome " + name + " to our chat room.\nTo leave enter STOP in a new line.");
@@ -81,7 +85,7 @@ public class ServerThread implements Runnable {
             while (true) {
                 String line = receive();
                 //if receive heart package then do nothing
-                if(line.equals(HEART)){
+                if (line.equals(HEART)) {
                     continue;
                 }
                 hists.add(line);
@@ -134,7 +138,6 @@ public class ServerThread implements Runnable {
 
                     continue;
                 }
-
                 if (startWithIgnoreCase(line, "STATS")) {
                     String pattern = "STATS\\s*-\\s*(.*)\\s*";
                     Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -160,6 +163,10 @@ public class ServerThread implements Runnable {
                     }
                     continue;
                 }
+//                {
+//                    broadcast(line, 0);
+//                    continue;
+//                }
                 send("invalid command, please input HELP to see command list");
             }
 

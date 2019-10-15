@@ -12,6 +12,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Observable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static src.ServerThread.startWithIgnoreCase;
 
 //using observer model to manage text flash
 class ChatHandle extends Observable {
@@ -29,7 +33,17 @@ class ChatHandle extends Observable {
             return;
         }
         try {
-            outputStream.writeUTF(new PBE_Encrypt().encode(text));
+            if (startWithIgnoreCase(text, "BROADCAST")) {
+                String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
+                Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+                Matcher m = r.matcher(text);
+                //parse the input content
+                if (m.find()) {
+                    text="BROADCAST-"+PostHandle.PostRequest(1,m.group(1),"some key");
+                }
+            }
+            //outputStream.writeUTF(new PBE_Encrypt().encode(text));
+            outputStream.writeUTF(text);
             outputStream.flush();
         } catch (Exception ex) {
             notifyObservers(ex);
@@ -45,7 +59,8 @@ class ChatHandle extends Observable {
         DataInputStream is = new DataInputStream(socket.getInputStream());
         String line;
         while (true) {
-            line = new PBE_Encrypt().decode(is.readUTF());
+            //line = new PBE_Encrypt().decode(is.readUTF());
+            line = is.readUTF();
             if (line.equals("@KICK")) {
                 //receive @KICK command
                 notifyObservers("you have been kicked!!");
@@ -86,7 +101,7 @@ class ChatHandle extends Observable {
             notifyObservers("Connection fail");
             e.printStackTrace();
             try {
-                Thread.sleep(3000);
+                Thread.sleep(5000);
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             }
@@ -103,8 +118,6 @@ class ChatHandle extends Observable {
             notifyObservers(e);
         }
     }
-
-
     //Close the socket
 
     public void close() {

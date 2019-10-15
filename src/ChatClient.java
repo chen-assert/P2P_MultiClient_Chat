@@ -27,6 +27,7 @@ public class ChatClient {
         private JButton sendButton;
         private ChatHandle chatHandle;
 
+        private JTextField inputKeyField;
         public ChatFrame(ChatHandle chatHandle) {
             this.chatHandle = chatHandle;
             chatHandle.addObserver(this);
@@ -36,12 +37,20 @@ public class ChatClient {
         private void buildGUI() {
             /*
                     GUI struct:
+                    key:-------
                     ***********
                     *********** <-TextArea
                     ***********
                     --------###
              inputTextField|Send button
              */
+            JLabel label = new JLabel();
+            label.setText("key:");
+            Box box0 = Box.createHorizontalBox();
+            add(box0,BorderLayout.NORTH);
+            inputKeyField = new JTextField();
+            box0.add(label);
+            box0.add(inputKeyField);
             textArea = new JTextArea(20, 50);
             textArea.setEditable(false);
             textArea.setLineWrap(true);
