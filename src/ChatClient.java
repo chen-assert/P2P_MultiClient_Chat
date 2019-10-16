@@ -5,19 +5,16 @@ package src;
  * @author jingruichen
  * @since 2018-11-08
  */
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.InetSocketAddress;
 import java.util.Observable;
 import java.util.Observer;
-
+import org.json.*;
 
 public class ChatClient {
     //GUI
@@ -27,7 +24,8 @@ public class ChatClient {
         private JButton sendButton;
         private ChatHandle chatHandle;
 
-        private JTextField inputKeyField;
+        protected  static JTextField inputKeyField;
+
         public ChatFrame(ChatHandle chatHandle) {
             this.chatHandle = chatHandle;
             chatHandle.addObserver(this);
@@ -45,9 +43,9 @@ public class ChatClient {
              inputTextField|Send button
              */
             JLabel label = new JLabel();
-            label.setText("key:");
+            label.setText("key(len>=8):");
             Box box0 = Box.createHorizontalBox();
-            add(box0,BorderLayout.NORTH);
+            add(box0, BorderLayout.NORTH);
             inputKeyField = new JTextField();
             box0.add(label);
             box0.add(inputKeyField);
@@ -64,10 +62,10 @@ public class ChatClient {
             // Action for the inputTextField and the goButton
             ActionListener sendListener = e -> {
                 String str = inputTextField.getText();
+                String key = inputKeyField.getText();
                 if (str != null && str.trim().length() > 0) {
-                    chatHandle.send(str);
+                    chatHandle.send(str, key);
                 }
-                inputTextField.requestFocus();
                 inputTextField.setText("");
             };
             //using enter keyboard or send button can both trigger event
@@ -88,15 +86,18 @@ public class ChatClient {
             });
         }
     }
+
     public static void main(String[] args) {
-        String server = null;
-        if (args.length != 0) {
+        String server = "localhost";
+        if (args[0].length()!= 0) {
             server = args[0];
-        } else {
-            server = "localhost";
+        }
+        String name="nobody";
+        if (args[1].length()!= 0) {
+            name = args[1];
         }
         int port = 9548;
-        ChatHandle chatHandle = new ChatHandle();
+        ChatHandle chatHandle = new ChatHandle(name);
         JFrame frame = new ChatFrame(chatHandle);
         frame.setSize(800, 600);
         frame.setTitle("Multi_Client_Chat@" + server + ":" + port);
@@ -104,6 +105,7 @@ public class ChatClient {
         frame.setLocationRelativeTo(null);
         frame.setResizable(true);
         frame.setVisible(true);
+        ((ChatFrame) frame).inputTextField.requestFocus();
         try {
             chatHandle.InitSocket(server, port);
         } catch (IOException ex) {

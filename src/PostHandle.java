@@ -9,19 +9,27 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class PostHandle {
-    public static void main(String[] args) throws IOException {
-        String z= PostRequest(1,"加密测试test","some key");
-        System.out.println(PostRequest(1,"加密测试test","some key"));
+    static class RequestFailException extends Exception {
+
     }
+
+    public static void main(String[] args) throws IOException, RequestFailException {
+        String z = PostRequest(1, "加密测试test", "some key");
+        System.out.println(PostRequest(1, "加密测试test", "some key"));
+    }
+
     //type:1-encrypt,2-decrypt
-    public static String PostRequest(int type, String message, String key) throws IOException {
-        final String POST_PARAMS = "{\"message\":\""+message+"\",\"key\":\""+key+"\"}";
-        //System.out.println(POST_PARAMS);
-        String url="encrypt";
-        if (type==2){
-            url="decrypt";
+    public static String PostRequest(int type, String message, String key) throws IOException, RequestFailException {
+        if (key.length() < 8) {
+            //return "key too short";
         }
-        URL obj = new URL("http://127.0.0.1:9541/des/"+url);
+        final String POST_PARAMS = "{\"message\":\"" + message + "\",\"key\":\"" + key + "\"}";
+        //System.out.println(POST_PARAMS);
+        String url = "encrypt";
+        if (type == 2) {
+            url = "decrypt";
+        }
+        URL obj = new URL("http://127.0.0.1:9541/des/" + url);
         HttpURLConnection postConnection = (HttpURLConnection) obj.openConnection();
         postConnection.setRequestMethod("POST");
         postConnection.setRequestProperty("Content-Type", "application/json");
@@ -38,14 +46,14 @@ public class PostHandle {
                     postConnection.getInputStream()));
             String inputLine;
             StringBuilder response = new StringBuilder();
-            while ((inputLine = in .readLine()) != null) {
+            while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
-            } in .close();
-            // print result
+            }
+            in.close();
             //System.out.println(response.toString());
             return response.toString();
         } else {
-            return "POST NOT WORKED";
+            throw new RequestFailException();
             //System.out.println("POST NOT WORKED");
         }
     }

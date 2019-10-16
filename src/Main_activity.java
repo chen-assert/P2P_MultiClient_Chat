@@ -29,7 +29,8 @@ public class Main_activity {
             if(selection.equals("Test Remote Server"))IPServer="chat.chenassert.xyz";
             else if(selection.equals("Local Server"))IPServer="localhost";
             else IPServer = JOptionPane.showInputDialog("Enter the Server ip address");
-            String[] arguments = new String[]{IPServer};
+            String UserName = JOptionPane.showInputDialog("Enter your name:");
+            String[] arguments = new String[]{IPServer,UserName};
             new ChatClient().main(arguments);
         }
     }

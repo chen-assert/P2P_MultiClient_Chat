@@ -19,13 +19,14 @@ import static src.Heart.HEART;
 
 // one client correspond to one thread
 public class ServerThread implements Runnable {
+    static String KICK="@KICK@";
     private String clientName = null;
     private DataInputStream is = null;
     private DataOutputStream os = null;
     private Socket clientSocket;
     private int clientCount;
     //command history
-    protected Vector<String> hists;
+    protected static Vector<String> hists;
 
     public ServerThread(Socket clientSocket, int clientCount) {
         this.clientSocket = clientSocket;
@@ -75,11 +76,11 @@ public class ServerThread implements Runnable {
             is = new DataInputStream(clientSocket.getInputStream());
             os = new DataOutputStream(clientSocket.getOutputStream());
             String name;
-            send("Please enter your name:");
+            //send("Please enter your name:");
             name = receive().trim();
             clientName = name;
             //input name
-            send("Welcome " + name + " to our chat room.\nTo leave enter STOP in a new line.");
+            send("Welcome " + name + " to our chat room.\nTo leave enter {!STOP} in a new line.");
             broadcast("*** A new user " + name + " entered the chat room ***", 1);
             // Start the conversation
             while (true) {
@@ -91,7 +92,7 @@ public class ServerThread implements Runnable {
                 hists.add(line);
                 // at most record 30 line history
                 if (hists.size() > 30) hists.remove(0);
-                if (line.equals("STOP")) {
+                if (line.equals("!STOP")) {
                     break;
                 }
                 if (startWithIgnoreCase(line, "BROADCAST")) {
@@ -106,15 +107,15 @@ public class ServerThread implements Runnable {
                     }
                     continue;
                 }
-                if (startWithIgnoreCase(line, "LIST")) {
+                else if (startWithIgnoreCase(line, "!LIST")) {
                     //send all users' information
                     for (ServerThread t : threadpool) {
                         send(String.format("%sUsername:%s/ID:%s\t\t(%s)", t == this ? "*" : "", t.clientName, t.clientCount, t.clientSocket));
                     }
                     continue;
                 }
-                if (startWithIgnoreCase(line, "KICK")) {
-                    String pattern = "KICK\\s*-\\s*(.*)\\s*";
+                else if (startWithIgnoreCase(line, "!KICK")) {
+                    String pattern = "!KICK\\s*-\\s*(.*)\\s*";
                     Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
                     Matcher m = r.matcher(line);
                     int flag = 0;
@@ -124,7 +125,7 @@ public class ServerThread implements Runnable {
                             //match name or id
                             if (kuser.equals(aThreadpools2.clientName) || kuser.equals(String.valueOf(aThreadpools2.clientCount))) {
                                 broadcast(kuser + " has been kicked!", 0);
-                                aThreadpools2.send("@KICK");
+                                aThreadpools2.send(KICK);
                                 flag = 1;
                                 break;
                             }
@@ -138,8 +139,8 @@ public class ServerThread implements Runnable {
 
                     continue;
                 }
-                if (startWithIgnoreCase(line, "STATS")) {
-                    String pattern = "STATS\\s*-\\s*(.*)\\s*";
+                else if (startWithIgnoreCase(line, "!STATS")) {
+                    String pattern = "!STATS\\s*-\\s*(.*)\\s*";
                     Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
                     Matcher m = r.matcher(line);
                     int flag = 0;

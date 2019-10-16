@@ -15,23 +15,34 @@ import java.util.Observable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static src.ChatClient.ChatFrame.inputKeyField;
+import static src.PostHandle.PostRequest;
+import static src.ServerThread.KICK;
 import static src.ServerThread.startWithIgnoreCase;
 
 //using observer model to manage text flash
 class ChatHandle extends Observable {
     //send a new message
-    public void send(String text) {
+    public void send(String text, String key) {
+        if (key == null) {
+            //return;
+        }
         //handle HELP command in local
         if (text.equalsIgnoreCase("HELP")) {
             String str = text + "\n" +
                     "  - command {BROADCAST - {content}} enables a client to send text to all the other clients connected to the server;\n" +
-                    "  - command {STOP} forces the server to close the connection with the client that initiated the command, this event must be announced to all other clients;\n" +
-                    "  - command {LIST} displays a list of all client IDs currently connected to the server;\n" +
-                    "  - command {KICK - ID} closes the connection between the server and the IP client, and also announces this to all clients;\n" +
-                    "  - command {STATS - ID} gets a list of all commands used by the client identified by the ID.\n";
+                    "  - command {!STOP} forces the server to close the connection with the client that initiated the command, this event must be announced to all other clients;\n" +
+                    "  - command {!LIST} displays a list of all client IDs currently connected to the server;\n" +
+                    "  - command {!KICK - ID} closes the connection between the server and the IP client, and also announces this to all clients;\n" +
+                    "  - command {!STATS - ID} gets a list of all commands used by the client identified by the ID.\n";
             notifyObservers(str);
             return;
+        } else if (text.equalsIgnoreCase("!STOP")) {
+            notifyObservers("You have left from the chat room, and the window would stop in 5 seconds.");
+            new exit_().start();
+            return;
         }
+        //try to send message
         try {
             if (startWithIgnoreCase(text, "BROADCAST")) {
                 String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
@@ -39,18 +50,22 @@ class ChatHandle extends Observable {
                 Matcher m = r.matcher(text);
                 //parse the input content
                 if (m.find()) {
-                    text="BROADCAST-"+PostHandle.PostRequest(1,m.group(1),"some key");
+                    try {
+                        String se = PostRequest(1, m.group(1), key);
+                        text = "BROADCAST-" + se;
+                        outputStream.writeUTF(text);
+                        outputStream.flush();
+                    } catch (PostHandle.RequestFailException e) {
+                        notifyObservers("Encrypt fail?");
+                    }
                 }
+            } else {
+                outputStream.writeUTF(text);
+                outputStream.flush();
             }
             //outputStream.writeUTF(new PBE_Encrypt().encode(text));
-            outputStream.writeUTF(text);
-            outputStream.flush();
         } catch (Exception ex) {
             notifyObservers(ex);
-        }
-        if (text.equals("STOP")) {
-            notifyObservers("You have left from the chat room, and the window would stop in 10 seconds.");
-            new exit_().start();
         }
     }
 
@@ -61,13 +76,26 @@ class ChatHandle extends Observable {
         while (true) {
             //line = new PBE_Encrypt().decode(is.readUTF());
             line = is.readUTF();
-            if (line.equals("@KICK")) {
-                //receive @KICK command
+            if (line.equals(KICK)) {
+                //receive KICK command
                 notifyObservers("you have been kicked!!");
                 close();
                 break;
             }
             notifyObservers(line);
+            String pattern = "<(.*)>\\s*(.*)\\s*";
+            Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+            Matcher m = r.matcher(line);
+            if (m.find() && !m.group(1).equals(name)) {
+                notifyObservers("Receive message:" + m.group(2));
+                try {
+                    notifyObservers("Decrypting...");
+                    String de = PostRequest(2, m.group(2), inputKeyField.getText());
+                    notifyObservers("The message is:" + de);
+                } catch (PostHandle.RequestFailException e) {
+                    notifyObservers("Decrypt fail?");
+                }
+            }
         }
     }
 
@@ -75,7 +103,7 @@ class ChatHandle extends Observable {
     class exit_ extends Thread {
         public void run() {
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -92,6 +120,12 @@ class ChatHandle extends Observable {
         super.notifyObservers(arg);
     }
 
+    public String name;
+
+    public ChatHandle(String name) {
+        this.name = name;
+    }
+
     public void InitSocket(String server, int port) throws IOException {
         try {
             notifyObservers("Try to connect to server@" + server + ":" + port);
@@ -106,11 +140,12 @@ class ChatHandle extends Observable {
                 e1.printStackTrace();
             }
             System.exit(0);
-
         }
         notifyObservers("Connection success");
         new Heart(this).start();
         outputStream = new DataOutputStream(socket.getOutputStream());
+        outputStream.writeUTF(name);
+        outputStream.flush();
         try {
             receive();
         } catch (Exception e) {
@@ -122,7 +157,7 @@ class ChatHandle extends Observable {
 
     public void close() {
         try {
-            send("STOP");
+            send("@STOP", null);
             socket.close();
         } catch (IOException ex) {
             notifyObservers(ex);

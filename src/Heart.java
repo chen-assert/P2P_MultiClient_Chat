@@ -15,7 +15,7 @@ public class Heart extends Thread {
         while (true) {
             try {
                 sleep(60000);
-                chatHandle.send(HEART);
+                chatHandle.send(HEART,null);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 chatHandle.close();
