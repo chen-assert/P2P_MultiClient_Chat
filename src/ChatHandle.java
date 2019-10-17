@@ -24,13 +24,20 @@ import static src.ServerThread.startWithIgnoreCase;
 class ChatHandle extends Observable {
     //send a new message
     public void send(String text, String key) {
-        if (key == null) {
-            //return;
+        if(key==null){
+            //notifyObservers("key is null?");
+            try {
+                outputStream.writeUTF(text);
+                outputStream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
         }
         //handle HELP command in local
-        if (text.equalsIgnoreCase("HELP")) {
+        if (text.equalsIgnoreCase("!HELP")) {
             String str = text + "\n" +
-                    "  - command {BROADCAST - {content}} enables a client to send text to all the other clients connected to the server;\n" +
+                    "  - command {BROADCAST - {content}} enables a client to send text to all the other clients connected to the server;(deprecated)\n" +
                     "  - command {!STOP} forces the server to close the connection with the client that initiated the command, this event must be announced to all other clients;\n" +
                     "  - command {!LIST} displays a list of all client IDs currently connected to the server;\n" +
                     "  - command {!KICK - ID} closes the connection between the server and the IP client, and also announces this to all clients;\n" +
@@ -44,26 +51,40 @@ class ChatHandle extends Observable {
         }
         //try to send message
         try {
-            if (startWithIgnoreCase(text, "BROADCAST")) {
-                String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
-                Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-                Matcher m = r.matcher(text);
-                //parse the input content
-                if (m.find()) {
-                    try {
-                        String se = PostRequest(1, m.group(1), key);
-                        text = "BROADCAST-" + se;
-                        outputStream.writeUTF(text);
-                        outputStream.flush();
-                    } catch (PostHandle.RequestFailException e) {
-                        notifyObservers("Encrypt fail?");
-                    }
+//            if (startWithIgnoreCase(text, "BROADCAST")) {
+//                String pattern = "BROADCAST\\s*-\\s*(.*)\\s*";
+//                Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+//                Matcher m = r.matcher(text);
+//                //parse the input content
+//                if (m.find()) {
+//                    try {
+//                        String se = PostRequest(1, m.group(1), key);
+//                        text = "BROADCAST-" + se;
+//                        outputStream.writeUTF(text);
+//                        outputStream.flush();
+//                    } catch (PostHandle.RequestFailException e) {
+//                        notifyObservers("Encrypt fail! Message cannot be sent");
+//                    }
+//                }
+//            } else {
+//                outputStream.writeUTF(text);
+//                outputStream.flush();
+//            }
+            try {
+                if (!startWithIgnoreCase(text, "!STOP") && !startWithIgnoreCase(text, "!KICK") &&
+                        !startWithIgnoreCase(text, "!LIST") && !startWithIgnoreCase(text, "!STATS")) {
+                    String se = PostRequest(1, text, key);
+                    text = "BROADCAST-" + se;
                 }
-            } else {
                 outputStream.writeUTF(text);
                 outputStream.flush();
+            } catch (Exception e) {
+                if (e instanceof PostHandle.DesFailException)
+                    throw new Exception("Encrypt fail! Message cannot be sent");
+                else {
+                    throw new Exception("Encrypt request fail! Seems the encrypt service is closed");
+                }
             }
-            //outputStream.writeUTF(new PBE_Encrypt().encode(text));
         } catch (Exception ex) {
             notifyObservers(ex);
         }
@@ -92,8 +113,8 @@ class ChatHandle extends Observable {
                     notifyObservers("Decrypting...");
                     String de = PostRequest(2, m.group(2), inputKeyField.getText());
                     notifyObservers("The message is:" + de);
-                } catch (PostHandle.RequestFailException e) {
-                    notifyObservers("Decrypt fail?");
+                } catch (PostHandle.DesFailException e) {
+                    notifyObservers("Decrypt fail!");
                 }
             }
         }

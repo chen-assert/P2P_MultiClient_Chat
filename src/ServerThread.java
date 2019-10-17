@@ -80,7 +80,7 @@ public class ServerThread implements Runnable {
             name = receive().trim();
             clientName = name;
             //input name
-            send("Welcome " + name + " to our chat room.\nTo leave enter {!STOP} in a new line.");
+            send("Welcome " + name + " to our chat room.\nEnter {!HELP} to check help information.");
             broadcast("*** A new user " + name + " entered the chat room ***", 1);
             // Start the conversation
             while (true) {

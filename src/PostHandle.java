@@ -9,20 +9,23 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class PostHandle {
-    static class RequestFailException extends Exception {
+    static class DesFailException extends Exception {
 
     }
 
-    public static void main(String[] args) throws IOException, RequestFailException {
+    public static void main(String[] args) throws IOException, DesFailException {
         String z = PostRequest(1, "加密测试test", "some key");
         System.out.println(PostRequest(1, "加密测试test", "some key"));
     }
 
     //type:1-encrypt,2-decrypt
-    public static String PostRequest(int type, String message, String key) throws IOException, RequestFailException {
+    public static String PostRequest(int type, String message, String key) throws IOException, DesFailException {
         if (key.length() < 8) {
             //return "key too short";
+            //utf-8 letter can't be treat correctly
         }
+        if(key.length()==0 && type==1)
+            return message;
         final String POST_PARAMS = "{\"message\":\"" + message + "\",\"key\":\"" + key + "\"}";
         //System.out.println(POST_PARAMS);
         String url = "encrypt";
@@ -53,7 +56,7 @@ public class PostHandle {
             //System.out.println(response.toString());
             return response.toString();
         } else {
-            throw new RequestFailException();
+            throw new DesFailException();
             //System.out.println("POST NOT WORKED");
         }
     }
